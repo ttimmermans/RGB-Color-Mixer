@@ -8,38 +8,24 @@ import java.awt.event.*;
 import java.util.ArrayList;
 
 /**
- * Write a description of class ConstrainedTextField here.
+ * Write a description of class RGBField here.
  * 
  * @author Thomas Timmermans
- * @version 21-07-2017
+ * @version 24-10-2017
  */
-public class ConstrainedTextField
-{
+public class RGBField extends JTextField {
+	
     JFrame frame;
-    JTextField field;
     AbstractDocument doc;
     DocFilter docFilter;
 
     /**
-     * Constructor for objects of class ConstrainedTextField
+     * Constructor for objects of class RGBField
      */
-    public ConstrainedTextField()
-    {
-        frame = new JFrame();
-        JPanel main = (JPanel)frame.getContentPane();
-        main.setLayout(new GridBagLayout());
-
-        field = new JTextField(6);
-        main.add(field);
-
-        doc = (AbstractDocument)field.getDocument();
+    public RGBField() {
+        doc = (AbstractDocument)this.getDocument();
         docFilter = new DocFilter();
         doc.setDocumentFilter(docFilter);
-
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(320, 240);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
     }
 
     /**
@@ -57,6 +43,9 @@ public class ConstrainedTextField
         return value;
     }
 
+    /**
+     * RGBField's DocumnetFilter
+     */
     public class DocFilter extends DocumentFilter {
 
         // The removal offset used by the DocFilter's remove method.
@@ -68,13 +57,13 @@ public class ConstrainedTextField
          */
         public DocFilter() {
             RemovalOffsetAdapter removalOffsetAdapter = new RemovalOffsetAdapter();
-            field.addKeyListener(removalOffsetAdapter);
+            RGBField.this.addKeyListener(removalOffsetAdapter);
         }
 
         /**
          * This adapter listens for use of the back space and delete keys to set
          * the removal offset used by the DocFilter's remove method to 1 or 0.
-         * This is because using backspace should remove the charater to the left 
+         * This is because using backspace should remove the character to the left 
          * of where the cursor is while delete should remove the character to the 
          * right of the cursor (only applies when user has nothing selected).
          */
@@ -93,11 +82,11 @@ public class ConstrainedTextField
         }
 
         public void remove(DocumentFilter.FilterBypass fb, int offset, int length) {
-            
-            if (field.getSelectionStart() != field.getSelectionEnd()) {
-            	// If true one or more characters from the field are selected
+            // If true one or more characters from the field are currently selected
+            if (RGBField.this.getSelectionStart() != RGBField.this.getSelectionEnd()) {
                 try {
-                    super.remove(fb, field.getSelectionStart(), field.getSelectionEnd() - field.getSelectionStart());
+                    super.remove(fb, RGBField.this.getSelectionStart(), 
+                    		RGBField.this.getSelectionEnd() - RGBField.this.getSelectionStart());
                 }
                 catch (BadLocationException e) {
                     e.printStackTrace();
@@ -105,7 +94,7 @@ public class ConstrainedTextField
             }
             else {
                 try {
-                    super.remove(fb, field.getCaretPosition() - removalOffset, 1);
+                    super.remove(fb, RGBField.this.getCaretPosition() - removalOffset, 1);
                 }
                 catch (BadLocationException e) {
                     e.printStackTrace();
@@ -113,7 +102,7 @@ public class ConstrainedTextField
             }
 
             if (doc.getLength() == 0) {
-                field.setText("0");
+            	RGBField.this.setText("0");
             }
         }
 
@@ -123,24 +112,27 @@ public class ConstrainedTextField
 
             // Insert the newly typed, or pasted, digit(s) to construct current value
             StringBuilder sb = new StringBuilder(getDocValue());
-            if (field.getSelectionStart() != field.getSelectionEnd()) {
-                sb.delete(field.getSelectionStart(), field.getSelectionEnd());
-                sb.insert(field.getSelectionStart(), onlyDigits);
+            if (RGBField.this.getSelectionStart() != RGBField.this.getSelectionEnd()) {
+                sb.delete(RGBField.this.getSelectionStart(), RGBField.this.getSelectionEnd());
+                sb.insert(RGBField.this.getSelectionStart(), onlyDigits);
             }
             else {
-                sb.insert(field.getSelectionStart(), onlyDigits);
+                sb.insert(RGBField.this.getSelectionStart(), onlyDigits);
             }
 
             try {
                 // Parse the StringBuilder constructed above and check that number's size
                 if (Integer.parseInt(sb.toString()) < 256) {
                     try {
-                        if (field.getSelectionStart() != field.getSelectionEnd()) {
-                            super.replace(fb, field.getSelectionStart(), 
-                                field.getSelectionEnd() - field.getSelectionStart(), onlyDigits, null);
+                        if (RGBField.this.getSelectionStart() != RGBField.this.getSelectionEnd()) {
+                            // One or more characters from the field are currently selected
+                            super.replace(fb, RGBField.this.getSelectionStart(), 
+                            		RGBField.this.getSelectionEnd() - RGBField.this.getSelectionStart(), 
+                            		onlyDigits, null);
                         }
                         else {
-                            super.replace(fb, field.getCaretPosition(), 0, onlyDigits, null);
+                            // No selection present at this time
+                            super.replace(fb, RGBField.this.getCaretPosition(), 0, onlyDigits, null);
                         }
                     }
                     catch (BadLocationException e) {
@@ -174,11 +166,25 @@ public class ConstrainedTextField
                     }
                 }
 
-                try {
-                    super.remove(fb, 0, firstNonZero);
+                if (firstNonZero == -1) {
+                    // If firstNonZero == -1 user has entered only zero's
+                    try {
+                        // Remove all zero's except the first one
+                        super.remove(fb, 0, doc.getLength() - 1);
+                    }
+                    catch (BadLocationException e) {
+                        e.printStackTrace();
+                    }
                 }
-                catch (BadLocationException e) {
-                    e.printStackTrace();
+                else {
+                    // In this case user has entered a non-zero after a zero
+                    try {
+                        // Remove the zero's preceding the non-zero character
+                        super.remove(fb, 0, firstNonZero);
+                    }
+                    catch (BadLocationException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -189,14 +195,14 @@ public class ConstrainedTextField
      * @return  The current value.
      */
     public int getFieldValue() {
-        return Integer.parseInt(field.getText());
+        return Integer.parseInt(this.getText());
     }
 
     /**
      * Create a string by removing all characters except non-latin decimal digits
      * from another string.
      * @param value  The string to construct a digit-only string from.
-     * @return newValue  The new string stripped of any non-digits. 
+     * @return newValue  The new string stripped from any non-digits. 
      */
     public String removeNonDigits(String value) {
         char[] chars = value.toCharArray();
@@ -228,4 +234,3 @@ public class ConstrainedTextField
         return digit;
     }
 }
-

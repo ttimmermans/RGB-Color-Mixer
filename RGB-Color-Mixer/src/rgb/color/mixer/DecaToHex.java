@@ -12,6 +12,10 @@ public class DecaToHex
     private static final String hexa = "0123456789ABCDEF";
     
     // https://www.w3schools.com/colors/colors_converter.asp
+    
+    // https://stackoverflow.com/questions/13465098/decimal-to-hexadecimal-converter-in-java
+    
+    // http://javatutorialhq.com/java/example-source-code/base-number-conversion/convert-decimal-hexadecimal/
 
     /**
      * Constructor for objects of class DecaToHex
