@@ -1,10 +1,12 @@
 package rgb.color.mixer;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.text.*;
-import java.awt.event.*;
+import javax.swing.text.DocumentFilter.FilterBypass;
 
+import java.awt.event.*;
 import java.util.ArrayList;
 
 /**
@@ -18,12 +20,19 @@ public class RGBField extends JTextField {
     JFrame frame;
     AbstractDocument doc;
     DocFilter docFilter;
+    
+    String fieldValue = null;
+    
+    
 
     /**
-     * Constructor for objects of class RGBField
+     * Constructor for RGBField
+     * @param text  The text the RGBField will be initialized with.
      */
-    public RGBField() {
+    public RGBField(String text) {
+    	super(text);
         doc = (AbstractDocument)this.getDocument();
+    	System.out.println("RGBField constructor EDT? " + SwingUtilities.isEventDispatchThread());
         docFilter = new DocFilter();
         doc.setDocumentFilter(docFilter);
     }
@@ -44,7 +53,7 @@ public class RGBField extends JTextField {
     }
 
     /**
-     * RGBField's DocumnetFilter
+     * RGBField's DocumentFilter
      */
     public class DocFilter extends DocumentFilter {
 
@@ -79,6 +88,12 @@ public class RGBField extends JTextField {
         }
 
         public void insertString(DocumentFilter.FilterBypass fb, int offset, String string, AttributeSet attr) {
+        	System.out.println("DocFilter.insertString() executing!");
+        	try {
+				super.replace(fb, 0, doc.getLength(), fieldValue, null);
+			} catch (BadLocationException e) {
+				e.printStackTrace();
+			}
         }
 
         public void remove(DocumentFilter.FilterBypass fb, int offset, int length) {
@@ -197,6 +212,27 @@ public class RGBField extends JTextField {
     public int getFieldValue() {
         return Integer.parseInt(this.getText());
     }
+    
+    
+ 
+    /**
+     * Set the value of this RGBField.
+     */
+    @Override
+    public void setText(String value) {
+    	doc = (AbstractDocument)this.getDocument();
+    	System.out.println("is docu nulll" + doc == null);
+     	System.out.println("RGBField setText Method EDT? " + SwingUtilities.isEventDispatchThread());
+    	try {
+    		doc.insertString(0, value, null);
+    		System.out.println("sysout-value in setText() : " + value);
+    		fieldValue = value;
+    	}
+    	catch (BadLocationException e) {
+    		System.out.println("BadLocationException caused by RGBField -> setText() !");
+    	}
+    }
+
 
     /**
      * Create a string by removing all characters except non-latin decimal digits
