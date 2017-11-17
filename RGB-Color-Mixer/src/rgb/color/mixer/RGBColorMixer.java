@@ -18,7 +18,7 @@ import javax.swing.text.BadLocationException;
 
 /**
  * @author Thomas Timmermans
- * @version 20-10-2017
+ * @version 17-11-2017
  */
 public class RGBColorMixer implements Runnable {
 	
@@ -54,23 +54,18 @@ public class RGBColorMixer implements Runnable {
 
         JPanel left = new JPanel(new GridLayout(7, 1));
         main.add(left);
-        
-        System.out.println("buildGUI Method EDT? " + SwingUtilities.isEventDispatchThread());
 
         right = new JPanel();
         right.setOpaque(true);
         main.add(right);
         
-        System.out.println("Making red slider...");
         redSlider = new JSlider(0, 255);
-        System.out.println("Making green slider...");
         greenSlider = new JSlider(0, 255);
-        System.out.println("Making blue slider...");
         blueSlider = new JSlider(0, 255);
         
-        RGBField redField = new RGBField("" + redSlider.getValue());
-        RGBField greenField = new RGBField("" + greenSlider.getValue());
-        RGBField blueField = new RGBField("" + blueSlider.getValue());
+        RGBField redField = new RGBField("" + redSlider.getValue(), redSlider);
+        RGBField greenField = new RGBField("" + greenSlider.getValue(), greenSlider);
+        RGBField blueField = new RGBField("" + blueSlider.getValue(), blueSlider);
         
         SliderListener redSliderListener = new SliderListener(redSlider, redField);
         SliderListener greenSliderListener = new SliderListener(greenSlider, greenField);
@@ -79,6 +74,14 @@ public class RGBColorMixer implements Runnable {
         redSlider.addChangeListener(redSliderListener);
         greenSlider.addChangeListener(greenSliderListener);
         blueSlider.addChangeListener(blueSliderListener);
+        
+        //TextDocListener redDocListener = new TextDocListener(redSlider, redSliderListener);
+        //TextDocListener greenDocListener = new TextDocListener(greenSlider, greenSliderListener);
+        //TextDocListener blueDocListener = new TextDocListener(blueSlider, blueSliderListener);
+        
+        //redField.getDocument().addDocumentListener(redDocListener);
+        //greenField.getDocument().addDocumentListener(greenDocListener);
+        //blueField.getDocument().addDocumentListener(blueDocListener);
         
         JTextField hexLabel = new JTextField("#ZZZZZZ");
         hexLabel.setEditable(false);
@@ -120,7 +123,7 @@ public class RGBColorMixer implements Runnable {
         
         @Override
         public void stateChanged(ChangeEvent e) {
-            if (this.isActive()/* && textDocListener.isActive()*/) {
+            if (this.isActive() /*&& textDocListener.isActive()*/) {
             	System.out.println("stateChanged! slidervalue: " + slider.getValue());
                 //textDocListener.setActive(false);
             	String sliderValue = "" + slider.getValue();
@@ -130,7 +133,11 @@ public class RGBColorMixer implements Runnable {
                 //textDocListener.setActive(true);
             }
         }
-        
+        /*
+        public void setDocListener(TextDocListener listener) {
+        	this.textDocListener = listener;
+        }
+        */
         public RGBField getField() {
             return field;
         }
@@ -151,55 +158,54 @@ public class RGBColorMixer implements Runnable {
     
     
     /*
+    /**
+     * TextDocListener
+     *
     public class TextDocListener implements DocumentListener {
-
+    	
+        //////////////
+    	
         RGBField field;
         JSlider slider;
         SliderListener sliderListener;
         AbstractDocument doc;
         boolean active;
 
-        public TextDocListener(SliderListener sliderListener) {
+        public TextDocListener(JSlider slider, SliderListener sliderListener) {
             this.sliderListener = sliderListener;
             this.field = sliderListener.getField(); // ?????????????????
-            this.slider = sliderListener.getSlider();
+            this.slider = slider; //sliderListener.getSlider();
             doc = (AbstractDocument)field.getDocument();
-            //DocFilter docFilter = new DocFilter(this.slider, this.field, doc, sliderListener);
-            //doc.setDocumentFilter(docFilter);
             active = true;
+            sliderListener.setDocListener(this);
         }
-
+    	
+    	//////////////
+    	
+        public void setSlider() {
+        	sliderListener.setActive(false);
+        	slider.setValue(Integer.parseInt(field.getText()));
+        	sliderListener.setActive(true);
+        }
+        
         @Override
         public void insertUpdate(DocumentEvent e) {
             //setSlider();
+        	System.out.println("TextDocListener insertUpdate! Current value: " + field.getText());
         }
 
         @Override
         public void removeUpdate(DocumentEvent e) {
             //setSlider();
+        	System.out.println("TextDocListener removeUpdate! Current value: " + field.getText());
         }
 
         @Override
         public void changedUpdate(DocumentEvent e) {
             //setSlider();
+        	System.out.println("TextDocListener changedUpdate! Current value: " + field.getText());
         }
-
-        public String getDocValue() {
-            String value = "";
-            try {
-                value = field.getDocument().getText(0, field.getDocument().getLength());
-                System.out.println("(String)value is: " + value);
-            }
-            catch (BadLocationException e) {
-                e.printStackTrace();
-            }
-            return value;
-        }
-
-        public SliderListener getSliderListener() {
-            return sliderListener;
-        }
-
+        
         public void setActive(boolean active) {
             this.active = active;
         }
@@ -207,8 +213,10 @@ public class RGBColorMixer implements Runnable {
         public boolean isActive() {
             return active;
         }
+    	
     }
     */
+    
     
     
     /**

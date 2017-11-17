@@ -3,8 +3,11 @@ package rgb.color.mixer;
 import java.awt.*;
 
 import javax.swing.*;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.*;
 import javax.swing.text.DocumentFilter.FilterBypass;
+
+import rgb.color.mixer.RGBColorMixer.SliderListener;
 
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -13,11 +16,11 @@ import java.util.ArrayList;
  * Write a description of class RGBField here.
  * 
  * @author Thomas Timmermans
- * @version 24-10-2017
+ * @version 17-11-2017
  */
 public class RGBField extends JTextField {
 	
-    JFrame frame;
+	JSlider slider;
     AbstractDocument doc;
     DocFilter docFilter;
     
@@ -29,12 +32,13 @@ public class RGBField extends JTextField {
      * Constructor for RGBField
      * @param text  The text the RGBField will be initialized with.
      */
-    public RGBField(String text) {
+    public RGBField(String text, JSlider slider) {
     	super(text);
         doc = (AbstractDocument)this.getDocument();
     	System.out.println("RGBField constructor EDT? " + SwingUtilities.isEventDispatchThread());
         docFilter = new DocFilter();
         doc.setDocumentFilter(docFilter);
+        this.slider = slider;
     }
 
     /**
@@ -94,6 +98,20 @@ public class RGBField extends JTextField {
 			} catch (BadLocationException e) {
 				e.printStackTrace();
 			}
+        	System.out.println("fieldValue in insertString " + fieldValue);
+        	
+        	ChangeListener[] cl = (ChangeListener[])(slider.getListeners(ChangeListener.class));
+        	System.out.println("cl size " + cl.length);
+        	
+        	SliderListener sl = (SliderListener)cl[0];
+        	/*
+        	sl.setActive(false);
+        	
+        	if (fieldValue != null)
+        	slider.setValue(Integer.parseInt(fieldValue));
+        	
+        	sl.setActive(true);
+        	*/
         }
 
         public void remove(DocumentFilter.FilterBypass fb, int offset, int length) {
@@ -221,15 +239,12 @@ public class RGBField extends JTextField {
     @Override
     public void setText(String value) {
     	doc = (AbstractDocument)this.getDocument();
-    	System.out.println("is docu nulll" + doc == null);
-     	System.out.println("RGBField setText Method EDT? " + SwingUtilities.isEventDispatchThread());
     	try {
     		doc.insertString(0, value, null);
-    		System.out.println("sysout-value in setText() : " + value);
     		fieldValue = value;
     	}
     	catch (BadLocationException e) {
-    		System.out.println("BadLocationException caused by RGBField -> setText() !");
+    		System.out.println("BadLocationException caused by RGBField -> setText()");
     	}
     }
 
